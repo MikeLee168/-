@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三菱福利卡 vs. UBER 健身通勤成本精算</title>
+    
+    <!-- Tailwind CSS for elegant styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for beautiful interactive charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for professional typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        // Tailwind Custom Configuration
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: #0b0f19;
+        }
+        /* Custom scrollbar for beautiful UI */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col antialiased">
+
+    <!-- App Container -->
+    <div class="flex-grow flex flex-col max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+        
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-800 pb-5 gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-brand-600/10 border border-brand-500/20 rounded-xl text-brand-500">
+                    <i class="fa-solid fa-calculator text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-white tracking-tight">
+                        三菱福利卡 vs. UBER 健身通勤精算
+                    </h1>
+                    <p class="text-xs md:text-sm text-slate-400">
+                        針對「佛光山 ⇄ 屏東市自由路世界健身」路線進行高精度跨縣市成本對抗分析
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 self-start md:self-auto">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    極致省錢推薦：自己開車
+                </span>
+            </div>
+        </header>
+
+        <!-- KPI Row -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- KPI 1: Car Annual Cost -->
+            <div class="bg-slate-900 border border-slate-800/80 p-5 rounded-2xl flex flex-col justify-between hover:border-slate-700/80 transition-all duration-300 shadow-lg">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span>福利卡自開年總成本</span>
+                    <i class="fa-solid fa-car text-brand-400 text-base"></i>
+                </div>
+                <div>
+                    <div class="text-2xl md:text-3xl font-extrabold text-white" id="kpi-car-cost">NT$ 0</div>
+                    <p class="text-[10px] text-slate-400 mt-1" id="kpi-car-details">固定 $0 + 變動 $0</p>
+                </div>
+            </div>
+
+            <!-- KPI 2: Uber Annual Cost -->
+            <div class="bg-slate-900 border border-slate-800/80 p-5 rounded-2xl flex flex-col justify-between hover:border-slate-700/80 transition-all duration-300 shadow-lg">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span>全程搭 UBER 年總成本</span>
+                    <i class="fa-brands fa-uber text-amber-500 text-base"></i>
+                </div>
+                <div>
+                    <div class="text-2xl md:text-3xl font-extrabold text-white" id="kpi-uber-cost">NT$ 0</div>
+                    <p class="text-[10px] text-slate-400 mt-1">單次來回估計 NT$ 1,000 元</p>
+                </div>
+            </div>
+
+            <!-- KPI 3: Savings -->
+            <div class="bg-slate-900 border border-slate-800/80 p-5 rounded-2xl flex flex-col justify-between hover:border-slate-700/80 transition-all duration-300 shadow-lg">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span>開車每年幫你省下</span>
+                    <i class="fa-solid fa-hand-holding-dollar text-emerald-400 text-base"></i>
+                </div>
+                <div>
+                    <div class="text-2xl md:text-3xl font-extrabold text-emerald-400" id="kpi-savings">NT$ 0</div>
+                    <p class="text-[10px] text-emerald-400/80 mt-1">
+                        <i class="fa-solid fa-caret-up"></i> 省下的錢可以多買好幾箱乳清蛋白！
+                    </p>
+                </div>
+            </div>
+
+            <!-- KPI 4: Break-Even Point -->
+            <div class="bg-slate-900 border border-slate-800/80 p-5 rounded-2xl flex flex-col justify-between hover:border-slate-700/80 transition-all duration-300 shadow-lg">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span>黃金交叉平衡點</span>
+                    <i class="fa-solid fa-chart-line text-purple-400 text-base"></i>
+                </div>
+                <div>
+                    <div class="text-2xl md:text-3xl font-extrabold text-purple-400" id="kpi-break-even">0 次/年</div>
+                    <p class="text-[10px] text-slate-400 mt-1" id="kpi-break-even-desc">超過此門檻開車即更划算</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Grid -->
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- Left Side: Interactive Input Controls (5 Cols) -->
+            <section class="lg:col-span-5 bg-slate-900 border border-slate-800/80 p-5 rounded-2xl shadow-xl space-y-6">
+                <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <i class="fa-solid fa-sliders text-brand-500"></i>
+                    <h2 class="text-lg font-bold text-white">精算參數設定</h2>
+                </div>
+
+                <!-- Control 1: Tax Category -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-300 flex justify-between">
+                        <span>福利卡牌照稅金種類 (1997cc)</span>
+                        <span class="text-brand-400 font-bold text-xs" id="tax-display">NT$ 17,410 /年</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btn-tax-passenger" onclick="setTaxType('passenger')" class="py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all duration-200 bg-brand-600/20 border-brand-500 text-white shadow-lg">
+                            <i class="fa-solid fa-car-side mr-1"></i> 自用小客車牌
+                        </button>
+                        <button id="btn-tax-cargo" onclick="setTaxType('cargo')" class="py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all duration-200 border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 hover:border-slate-700">
+                            <i class="fa-solid fa-truck-flatbed mr-1"></i> 自用小貨車牌
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-slate-400 leading-relaxed">
+                        小客車牌年度稅費 $17,410（牌照 $11,230 + 燃料 $6,180）。貨車牌年度稅費 $8,400（牌照 $3,600 + 燃料 $4,800）。
+                    </p>
+                </div>
+
+                <hr class="border-slate-800">
+
+                <!-- Control 2: Insurance -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm font-medium text-slate-300">
+                        <span>年度保險費 (強制險+第三人)</span>
+                        <span class="font-bold text-white" id="ins-value">NT$ 5,000</span>
+                    </div>
+                    <input type="range" id="input-insurance" min="0" max="20000" step="500" value="5000" oninput="handleInputChange('insurance', this.value)" class="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-brand-500">
+                </div>
+
+                <!-- Control 3: Parking -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm font-medium text-slate-300">
+                        <span>年度停車費預算</span>
+                        <span class="font-bold text-white" id="park-value">NT$ 6,000</span>
+                    </div>
+                    <input type="range" id="input-parking" min="0" max="25000" step="500" value="6000" oninput="handleInputChange('parking', this.value)" class="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-brand-500">
+                </div>
+
+                <!-- Control 4: Old Car Maintenance -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm font-medium text-slate-300">
+                        <span>老車年度維修與耗材預算</span>
+                        <span class="font-bold text-white" id="maint-value">NT$ 15,000</span>
+                    </div>
+                    <input type="range" id="input-maint" min="0" max="50000" step="1000" value="15000" oninput="handleInputChange('maint', this.value)" class="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-brand-500">
+                    <p class="text-[11px] text-slate-400 leading-relaxed">
+                        老車耗材包括輪胎、機油、五油三水保養以及突發性老舊零件更換。
+                    </p>
+                </div>
+
+                <hr class="border-slate-800">
+
+                <!-- Control 5: Weekly Commute Frequency -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm font-medium text-slate-300">
+                        <span>每週去健身房來回次數</span>
+                        <span class="font-bold text-white" id="freq-value">3 次/週</span>
+                    </div>
+                    <input type="range" id="input-freq" min="1" max="7" step="1" value="3" oninput="handleInputChange('freq', this.value)" class="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-brand-500">
+                    <p class="text-[11px] text-brand-400 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>一年相當於通勤 <strong id="annual-trips-text">156</strong> 次來回。</span>
+                    </p>
+                </div>
+
+                <!-- Info summary box -->
+                <div class="bg-slate-950 rounded-xl p-3 border border-slate-800 space-y-1">
+                    <div class="text-[11px] text-slate-400 flex justify-between">
+                        <span>單次來回油耗加油費用估算:</span>
+                        <span class="text-slate-200 font-semibold">約 NT$ 167 (3次來回$500)</span>
+                    </div>
+                    <div class="text-[11px] text-slate-400 flex justify-between">
+                        <span>單次來回 UBER 車資估算:</span>
+                        <span class="text-slate-200 font-semibold">約 NT$ 1,000 (單程$500)</span>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Right Side: Visualization and Analysis (7 Cols) -->
+            <section class="lg:col-span-7 space-y-6">
+                
+                <!-- Chart Tab Container -->
+                <div class="bg-slate-900 border border-slate-800/80 p-5 rounded-2xl shadow-xl">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-800 pb-3 mb-4 gap-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-chart-bar text-brand-500"></i>
+                            <h2 class="text-lg font-bold text-white">年度費用與交叉分析圖表</h2>
+                        </div>
+                        <!-- Chart Switcher -->
+                        <div class="inline-flex p-1 bg-slate-950 rounded-xl border border-slate-800">
+                            <button id="tab-bar" onclick="setChartType('bar')" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 bg-slate-900 text-white shadow-md">
+                                結構分析圖
+                            </button>
+                            <button id="tab-line" onclick="setChartType('line')" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-slate-400 hover:text-slate-200">
+                                趨勢平衡圖
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Section -->
+                    <div class="relative w-full h-[320px] flex items-center justify-center bg-slate-950 rounded-xl border border-slate-800/50 p-2">
+                        <canvas id="costChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Detailed Table Grid -->
+                <div class="bg-slate-900 border border-slate-800/80 p-5 rounded-2xl shadow-xl">
+                    <div class="flex items-center gap-2 border-b border-slate-800 pb-3 mb-4">
+                        <i class="fa-solid fa-table-list text-brand-500"></i>
+                        <h2 class="text-lg font-bold text-white">年度總成本明細對照</h2>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-slate-800 text-xs uppercase">
+                                    <th class="py-3 px-4 font-semibold">年度支出項目</th>
+                                    <th class="py-3 px-4 text-right font-semibold">自開福利卡 (NT$)</th>
+                                    <th class="py-3 px-4 text-right font-semibold">搭乘 UBER (NT$)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800/50">
+                                <tr>
+                                    <td class="py-3 px-4 text-slate-300">
+                                        <span class="flex items-center gap-2">
+                                            <i class="fa-solid fa-stamp text-slate-500 w-4"></i> 年度燃料/牌照稅金
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-medium text-slate-200" id="table-car-tax">$17,410</td>
+                                    <td class="py-3 px-4 text-right text-slate-500">$0</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 text-slate-300">
+                                        <span class="flex items-center gap-2">
+                                            <i class="fa-solid fa-shield-halved text-slate-500 w-4"></i> 年度基本保險費
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-medium text-slate-200" id="table-car-ins">$5,000</td>
+                                    <td class="py-3 px-4 text-right text-slate-500">$0</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 text-slate-300">
+                                        <span class="flex items-center gap-2">
+                                            <i class="fa-solid fa-square-parking text-slate-500 w-4"></i> 年度停車費預算
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-medium text-slate-200" id="table-car-park">$6,000</td>
+                                    <td class="py-3 px-4 text-right text-slate-500">$0</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 text-slate-300">
+                                        <span class="flex items-center gap-2">
+                                            <i class="fa-solid fa-screwdriver-wrench text-slate-500 w-4"></i> 老車年度維修與耗材費
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-medium text-slate-200" id="table-car-maint">$15,000</td>
+                                    <td class="py-3 px-4 text-right text-slate-500">$0</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 text-slate-300">
+                                        <span class="flex items-center gap-2">
+                                            <i class="fa-solid fa-gas-pump text-slate-500 w-4"></i> 通勤變動成本 (<span class="text-[11px] text-slate-400">加油 vs UBER</span>)
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-medium text-slate-200" id="table-car-fuel">$26,000</td>
+                                    <td class="py-3 px-4 text-right font-medium text-slate-200" id="table-uber-fare">$156,000</td>
+                                </tr>
+                                <tr class="bg-brand-500/5 font-bold border-t-2 border-slate-800">
+                                    <td class="py-3 px-4 text-slate-200">總成本累計</td>
+                                    <td class="py-3 px-4 text-right text-brand-400" id="table-car-total">$69,410</td>
+                                    <td class="py-3 px-4 text-right text-amber-500" id="table-uber-total">$156,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Editorial Analysis Card -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800/80 p-5 rounded-2xl shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                        <i class="fa-solid fa-quote-right text-8xl text-white"></i>
+                    </div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-circle-exclamation text-brand-500"></i>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wider">精算師財務建議</h3>
+                    </div>
+                    <p class="text-xs md:text-sm text-slate-300 leading-relaxed space-y-2" id="editorial-recommendation">
+                        載入建議中...
+                    </p>
+                </div>
+
+            </section>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="text-center text-[11px] text-slate-500 border-t border-slate-800 pt-5 mt-auto">
+            © 2026 跨縣市通勤成本精算系統 · 本地精算結果僅供財務評估與參考
+        </footer>
+    </div>
+
+    <script>
+        // Internal Global State
+        const CONSTANTS = {
+            fuelPerRoundTrip: 500 / 3,       // $166.67
+            uberPerRoundTrip: 1000,          // $1000
+            weeksPerYear: 52,
+            taxPassenger: 17410,
+            taxCargo: 8400
+        };
+
+        const state = {
+            taxType: 'passenger',
+            taxCost: CONSTANTS.taxPassenger,
+            insurance: 5000,
+            parking: 6000,
+            maint: 15000,
+            weeklyFreq: 3,
+            chartType: 'bar' // 'bar' or 'line'
+        };
+
+        let chartInstance = null;
+
+        // Pure calculation formulas
+        function calculateMetrics() {
+            const annualTrips = state.weeklyFreq * CONSTANTS.weeksPerYear;
+            
+            const fixedCarCost = state.taxCost + state.insurance + state.parking + state.maint;
+            const variableCarCost = annualTrips * CONSTANTS.fuelPerRoundTrip;
+            const carTotal = fixedCarCost + variableCarCost;
+            
+            const uberTotal = annualTrips * CONSTANTS.uberPerRoundTrip;
+            const savings = uberTotal - carTotal;
+
+            // Break-even (N) = FixedCost / (UberPerTrip - FuelPerTrip)
+            const diffPerTrip = CONSTANTS.uberPerRoundTrip - CONSTANTS.fuelPerRoundTrip;
+            const breakEvenTrips = diffPerTrip > 0 ? (fixedCarCost / diffPerTrip) : 0;
+
+            return {
+                annualTrips,
+                fixedCarCost,
+                variableCarCost,
+                carTotal,
+                uberTotal,
+                savings,
+                breakEvenTrips
+            };
+        }
+
+        // Handle text slider inputs
+        function handleInputChange(field, value) {
+            const numValue = Number(value);
+            state[field] = numValue;
+
+            // Update UI Labels immediately
+            if (field === 'insurance') document.getElementById('ins-value').textContent = `NT$ ${numValue.toLocaleString()}`;
+            if (field === 'parking') document.getElementById('park-value').textContent = `NT$ ${numValue.toLocaleString()}`;
+            if (field === 'maint') document.getElementById('maint-value').textContent = `NT$ ${numValue.toLocaleString()}`;
+            if (field === 'freq') {
+                document.getElementById('freq-value').textContent = `${numValue} 次/週`;
+                document.getElementById('annual-trips-text').textContent = (numValue * CONSTANTS.weeksPerYear).toLocaleString();
+            }
+
+            updateDashboard();
+        }
+
+        // Toggle passenger/cargo tax rates
+        function setTaxType(type) {
+            state.taxType = type;
+            state.taxCost = (type === 'passenger') ? CONSTANTS.taxPassenger : CONSTANTS.taxCargo;
+            
+            const passBtn = document.getElementById('btn-tax-passenger');
+            const cargoBtn = document.getElementById('btn-tax-cargo');
+            const display = document.getElementById('tax-display');
+
+            if (type === 'passenger') {
+                passBtn.className = "py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all duration-200 bg-brand-600/20 border-brand-500 text-white shadow-lg";
+                cargoBtn.className = "py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all duration-200 border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 hover:border-slate-700";
+                display.textContent = `NT$ ${CONSTANTS.taxPassenger.toLocaleString()} /年`;
+            } else {
+                cargoBtn.className = "py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all duration-200 bg-brand-600/20 border-brand-500 text-white shadow-lg";
+                passBtn.className = "py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all duration-200 border-slate-800 bg-slate-950 text-slate-400 hover:text-slate-200 hover:border-slate-700";
+                display.textContent = `NT$ ${CONSTANTS.taxCargo.toLocaleString()} /年`;
+            }
+
+            updateDashboard();
+        }
+
+        // Toggle Chart Types
+        function setChartType(type) {
+            state.chartType = type;
+            
+            const tabBar = document.getElementById('tab-bar');
+            const tabLine = document.getElementById('tab-line');
+
+            if (type === 'bar') {
+                tabBar.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 bg-slate-900 text-white shadow-md";
+                tabLine.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-slate-400 hover:text-slate-200";
+            } else {
+                tabLine.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 bg-slate-900 text-white shadow-md";
+                tabBar.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 text-slate-400 hover:text-slate-200";
+            }
+
+            renderChart();
+        }
+
+        // Custom responsive renderer for Chart.js
+        function renderChart() {
+            const metrics = calculateMetrics();
+            const ctx = document.getElementById('costChart').getContext('2d');
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            if (state.chartType === 'bar') {
+                // Stacked Bar Chart for structural cost comparison
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['自開福利卡', '全程搭乘 UBER'],
+                        datasets: [
+                            {
+                                label: '牌照與燃料稅金',
+                                data: [state.taxCost, 0],
+                                backgroundColor: '#3b82f6',
+                                borderRadius: 4
+                            },
+                            {
+                                label: '保險費支出',
+                                data: [state.insurance, 0],
+                                backgroundColor: '#6366f1',
+                                borderRadius: 4
+                            },
+                            {
+                                label: '年度停車預算',
+                                data: [state.parking, 0],
+                                backgroundColor: '#a855f7',
+                                borderRadius: 4
+                            },
+                            {
+                                label: '老車耗材與維修',
+                                data: [state.maint, 0],
+                                backgroundColor: '#ec4899',
+                                borderRadius: 4
+                            },
+                            {
+                                label: '通勤油錢 / UBER 總車資',
+                                data: [metrics.variableCarCost, metrics.uberTotal],
+                                backgroundColor: '#10b981',
+                                borderRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                stacked: true,
+                                grid: { color: '#1e293b' },
+                                ticks: { color: '#94a3b8', callback: value => 'NT$ ' + value.toLocaleString() }
+                            },
+                            y: {
+                                stacked: true,
+                                grid: { display: false },
+                                ticks: { color: '#ffffff', font: { weight: 'bold' } }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#94a3b8', font: { size: 10 }, padding: 12 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) label += ': ';
+                                        if (context.parsed.x !== null) {
+                                            label += 'NT$ ' + context.parsed.x.toLocaleString();
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                // Line Chart for Break-even Point trend Analysis
+                const xValues = [];
+                const carLineData = [];
+                const uberLineData = [];
+
+                // Generate points from 0 to 300 trips
+                for (let i = 0; i <= 300; i += 25) {
+                    xValues.push(i);
+                    const fixed = state.taxCost + state.insurance + state.parking + state.maint;
+                    carLineData.push(fixed + (i * CONSTANTS.fuelPerRoundTrip));
+                    uberLineData.push(i * CONSTANTS.uberPerRoundTrip);
+                }
+
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: xValues,
+                        datasets: [
+                            {
+                                label: '自開福利卡年總支出',
+                                data: carLineData,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                fill: true,
+                                tension: 0.1,
+                                borderWidth: 3
+                            },
+                            {
+                                label: '搭 UBER 年總支出',
+                                data: uberLineData,
+                                borderColor: '#f59e0b',
+                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                fill: true,
+                                tension: 0.1,
+                                borderWidth: 3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                grid: { color: '#1e293b' },
+                                title: { display: true, text: '年度來回次數 (次/年)', color: '#94a3b8' },
+                                ticks: { color: '#94a3b8' }
+                            },
+                            y: {
+                                grid: { color: '#1e293b' },
+                                title: { display: true, text: '年度費用計 (NT$)', color: '#94a3b8' },
+                                ticks: { color: '#94a3b8', callback: value => 'NT$ ' + value.toLocaleString() }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Global DOM synchronization
+        function updateDashboard() {
+            const metrics = calculateMetrics();
+
+            // 1. Update KPI Section
+            document.getElementById('kpi-car-cost').textContent = `NT$ ${Math.round(metrics.carTotal).toLocaleString()}`;
+            document.getElementById('kpi-car-details').textContent = `固定 $${Math.round(metrics.fixedCarCost).toLocaleString()} + 變動 $${Math.round(metrics.variableCarCost).toLocaleString()}`;
+            
+            document.getElementById('kpi-uber-cost').textContent = `NT$ ${Math.round(metrics.uberTotal).toLocaleString()}`;
+            
+            const savingsEl = document.getElementById('kpi-savings');
+            if (metrics.savings >= 0) {
+                savingsEl.textContent = `NT$ ${Math.round(metrics.savings).toLocaleString()}`;
+                savingsEl.className = "text-2xl md:text-3xl font-extrabold text-emerald-400";
+            } else {
+                savingsEl.textContent = `NT$ ${Math.round(Math.abs(metrics.savings)).toLocaleString()}`;
+                savingsEl.className = "text-2xl md:text-3xl font-extrabold text-red-500";
+            }
+
+            document.getElementById('kpi-break-even').textContent = `${metrics.breakEvenTrips.toFixed(1)} 次/年`;
+
+            // 2. Update Details Table
+            const fixed = state.taxCost + state.insurance + state.parking;
+            document.getElementById('table-car-tax').textContent = `NT$ ${state.taxCost.toLocaleString()}`;
+            document.getElementById('table-car-ins').textContent = `NT$ ${state.insurance.toLocaleString()}`;
+            document.getElementById('table-car-park').textContent = `NT$ ${state.parking.toLocaleString()}`;
+            document.getElementById('table-car-maint').textContent = `NT$ ${state.maint.toLocaleString()}`;
+            document.getElementById('table-car-fuel').textContent = `NT$ ${Math.round(metrics.variableCarCost).toLocaleString()}`;
+            document.getElementById('table-uber-fare').textContent = `NT$ ${Math.round(metrics.uberTotal).toLocaleString()}`;
+            document.getElementById('table-car-total').textContent = `NT$ ${Math.round(metrics.carTotal).toLocaleString()}`;
+            document.getElementById('table-uber-total').textContent = `NT$ ${Math.round(metrics.uberTotal).toLocaleString()}`;
+
+            // 3. Update Editorial Recommendation
+            const recEl = document.getElementById('editorial-recommendation');
+            const taxTypeZH = (state.taxType === 'passenger') ? '自用小客車牌' : '自用小貨車牌';
+            
+            let adviceHTML = `
+                三菱福利卡 (Freeca 2.0L) 以實測「來回3次油錢只需 $500元」在目前高油價時代表現依然相當經濟。
+                雖然福利卡在 ${taxTypeZH} 以及老車年度維護方面，有著固定的硬性開銷 (約 <strong>NT$ ${metrics.fixedCarCost.toLocaleString()} 元</strong>)，
+                但因跨縣市 UBER 長途溢價極大 (每次來回車資約 NT$ 1,000 元，而加油只要 $167 元)，
+                你每年的通勤次數為 <strong>${metrics.annualTrips} 次</strong>。
+            `;
+
+            if (metrics.annualTrips > metrics.breakEvenTrips) {
+                const diff = Math.round(metrics.savings);
+                adviceHTML += `
+                    <br><strong class="text-emerald-400 text-sm">💡 財務精算結論：繼續開車！</strong>
+                    你的年運動通勤量已遠超黃金交叉點 (<strong>${metrics.breakEvenTrips.toFixed(1)}次</strong>)。
+                    在目前的頻率下，自己開福利卡每年可幫你<strong>省下 NT$ ${diff.toLocaleString()} 元</strong> 的可支配現金。
+                    就算未來油價上漲或老車突然需要大修一筆 $20,000 的零件費，開車依然在經濟面上掌握絕對的主動優勢！
+                `;
+            } else {
+                const loss = Math.round(Math.abs(metrics.savings));
+                adviceHTML += `
+                    <br><strong class="text-amber-500 text-sm">💡 財務精算結論：可考慮搭乘 UBER。</strong>
+                    因為你目前的去健身房頻率較低，福利卡的固定成本 (稅金、折舊、耗材與折舊) 平均分攤到每趟後的開銷較高，
+                    直接搭乘 UBER 反而每年可以幫你多出 <strong>NT$ ${loss.toLocaleString()} 元</strong> 的預算彈性，
+                    且無須承擔老車顧路、年檢以及找車位、塞車的時間精神成本。
+                `;
+            }
+
+            recEl.innerHTML = adviceHTML;
+
+            // 4. Update the Active Charts
+            renderChart();
+        }
+
+        // Initialize App on Window Load
+        window.onload = function () {
+            updateDashboard();
+        }
+    </script>
+</body>
+</html>
